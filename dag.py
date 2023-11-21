@@ -11,9 +11,13 @@ def fetch_code_from_s3(bucket_name, object_key, local_path):
 
 def execute_python_code(local_path):
     try:
-        # Execute the downloaded Python code
-        exec(open(local_path).read(), globals(), locals())
-        print(f"[{datetime.utcnow()}] Python code executed successfully")
+        # Check if the file exists locally
+        if os.path.isfile(local_path):
+            # Execute the downloaded Python code
+            exec(open(local_path).read(), globals(), locals())
+            print(f"[{datetime.utcnow()}] Python code executed successfully")
+        else:
+            print(f"[{datetime.utcnow()}] Error: Local file '{local_path}' does not exist.")
     except Exception as e:
         print(f"[{datetime.utcnow()}] Error executing Python code: {e}")
         raise  # Re-raise the exception to mark the task as failed
@@ -21,7 +25,7 @@ def execute_python_code(local_path):
 def my_python_function(**kwargs):
     # Replace 'your-s3-bucket' and 'path/to/your/code.py' with your S3 bucket and path
     s3_bucket = 'mwaa-environmentbucket-beynhcbcqflf'
-    s3_key = 's3://mwaa-environmentbucket-beynhcbcqflf/dag.py'
+    s3_key = 'dag.py' 
     local_path = '/home/ubuntu/airflow/code/dag.py'
 
     # Fetch code from S3
