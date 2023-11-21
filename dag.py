@@ -10,9 +10,13 @@ def fetch_code_from_s3(bucket_name, object_key, local_path):
     s3.download_file(bucket_name, object_key, local_path)
 
 def execute_python_code(local_path):
-    # Execute the downloaded Python code
-    exec(open(local_path).read(), globals(), locals())
-    print("Python code executed successfully")
+    try:
+        # Execute the downloaded Python code
+        exec(open(local_path).read(), globals(), locals())
+        print(f"[{datetime.utcnow()}] Python code executed successfully")
+    except Exception as e:
+        print(f"[{datetime.utcnow()}] Error executing Python code: {e}")
+        raise  # Re-raise the exception to mark the task as failed
 
 def my_python_function(**kwargs):
     # Replace 'your-s3-bucket' and 'path/to/your/code.py' with your S3 bucket and path
