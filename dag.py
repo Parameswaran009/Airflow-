@@ -15,13 +15,13 @@ def my_python_function(**kwargs):
     try:
         # Replace 'mwaa-environmentbucket-beynhcbcqflf' and 's3://mwaa-environmentbucket-beynhcbcqflf/dag.py'
         # with your S3 bucket and path
-        fetch_code_from_s3('mwaa-environmentbucket-beynhcbcqflf', 's3://mwaa-environmentbucket-beynhcbcqflf/dag.py', '/home/ubuntu/airflow/code/code.py')
+        fetch_code_from_s3('mwaa-environmentbucket-beynhcbcqflf', 's3://mwaa-environmentbucket-beynhcbcqflf/dag.py', '/home/ubuntu/airflow/code/dag.py')
 
         # Replace '/home/ubuntu/airflow/code/' with your desired local path
         local_path = '/home/ubuntu/airflow/code/'
 
         # Execute the downloaded Python code
-        exec(open(os.path.join(local_path, 'code.py')).read(), globals(), locals())
+        exec(open(os.path.join(local_path, 'dag.py')).read(), globals(), locals())
         print("Python code executed successfully")
     except Exception as e:
         print(f"An error occurred: {str(e)}")
