@@ -1,49 +1,39 @@
-from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
-import boto3
-import os
+from datetime import datetime, timedelta
 
-def fetch_code_from_s3(bucket_name, object_key, local_path):
-    s3 = boto3.client('s3')
-    s3.download_file(bucket_name, object_key, local_path)
-
-def execute_python_code(local_path):
-    try:
-        # Check if the file exists locally
-        if os.path.isfile(local_path):
-            # Execute the downloaded Python code
-            exec(open(local_path).read(), globals(), locals())
-            print(f"[{datetime.utcnow()}] Python code executed successfully")
-        else:
-            print(f"[{datetime.utcnow()}] Error: Local file '{local_path}' does not exist.")
-    except Exception as e:
-        print(f"[{datetime.utcnow()}] Error executing Python code: {e}")
-        raise  # Re-raise the exception to mark the task as failed
-
-def my_python_function(**kwargs):
-    # Replace 'your-s3-bucket' and 'path/to/your/code.py' with your S3 bucket and path
-    s3_bucket = 'mwaa-environmentbucket-beynhcbcqflf'
-    s3_key = 'dag.py' 
-    local_path = '/home/ubuntu/airflow/code/dag.py'
-
-    # Fetch code from S3
-    fetch_code_from_s3(s3_bucket, s3_key, local_path)
-
-    # Execute the downloaded Python code
-    execute_python_code(local_path)
-
+# Define default_args dictionary to specify the default parameters of the DAG
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2023, 1, 1),
-    'retries': 0,  # Set retries to 0 to disable retries
+    'retries': 0,
+    'retry_delay': 0,
 }
 
-with DAG('my_airflow_dag', default_args=default_args, schedule_interval=None) as dag:
-    start_task = DummyOperator(task_id='start_task')
-    python_task = PythonOperator(task_id='python_task', python_callable=my_python_function, provide_context=True, retries=0)  # Set retries to 0
-    end_task = DummyOperator(task_id='end_task')
+# Instantiate the DAG
+dag = DAG(
+    'my_dag',
+    default_args=default_args,
+    catchup=False,  # Prevent backfilling
+)
 
-    start_task >> python_task >> end_task
+# Define tasks
+start_task = DummyOperator(task_id='start_task', dag=dag)
+
+def my_python_function(**kwargs):
+    # Your Python code goes here
+    print("Hello from my Python function!")
+
+python_task = PythonOperator(
+    task_id='python_task',
+    python_callable=my_python_function,
+    provide_context=True,
+    dag=dag,
+)
+
+end_task = DummyOperator(task_id='end_task', dag=dag)
+
+# Define the task dependencies
+start_task >> python_task >> end_task
 
